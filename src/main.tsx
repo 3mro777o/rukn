@@ -24,7 +24,7 @@ function App(){
  const [connected,setConnected]=useState(false);const [busy,setBusy]=useState(false);const [error,setError]=useState(false);
  const [now,setNow]=useState(new Date());
  const [prayers,setPrayers]=useState<Prayers|null>(null);const [prayerFailed,setPrayerFailed]=useState(false);
- const [manual,setManual]=useState<{face:string;at:number}|null>(null);const [pinned,setPinned]=useState(()=>read('pinned',''));
+ const [manual,setManual]=useState<{face:string;at:number}|null>(null);const [dismissed,setDismissed]=useState(0);const [pinned,setPinned]=useState(()=>read('pinned',''));
  const [settings,setSettings]=useState(false);const [nightOverride,setNightOverride]=useState(false);
  const [keep,setKeep]=useState(()=>read('keepAwake','true')!=='false');const [wake,setWake]=useState(false);
  const [adhanOn,setAdhanOn]=useState(()=>read('adhan','false')==='true');const [adhanReady,setAdhanReady]=useState(false);const [adhanPlaying,setAdhanPlaying]=useState(false);
@@ -92,7 +92,7 @@ function App(){
  const next=salah.find(p=>p.at>t)||(today?.next&&today.next.at>t?today.next:null);
  const sunrise=today?.today.find(p=>p.key==='sunrise'&&p.at>t)||null;
  const active=salah.find(p=>t>=p.at&&t<p.at+L.prayerAfter*60000)||null;
- const nearPrayer=salah.some(p=>t>=p.at-L.prayerBefore*60000&&t<p.at+L.prayerAfter*60000);
+ const nearPrayer=salah.find(p=>t>=p.at-L.prayerBefore*60000&&t<p.at+L.prayerAfter*60000)||null;
 
  // Adhan: once per prayer, within its first minute, on devices where it is enabled.
  useEffect(()=>{
@@ -114,10 +114,11 @@ function App(){
  },[t]); // eslint-disable-line
 
  // Face choice: manual (until idle for returnAfter) > pinned face > automatic by time.
- const auto=L.auto&&nearPrayer?'prayer':'home';
+ // Leaving the prayer view by hand ends automatic switching for that prayer.
+ const auto=L.auto&&nearPrayer&&nearPrayer.at!==dismissed?'prayer':'home';
  useEffect(()=>{if(manual&&t-manual.at>L.returnAfter*1000)setManual(null);},[t]);// eslint-disable-line
  const base=FACES[pinned]?pinned:auto;const face=manual?.face||base;
- const show=(f:string)=>setManual(f===base?null:{face:f,at:Date.now()});
+ const show=(f:string)=>{let b=base;if(auto==='prayer'&&f!=='prayer'){setDismissed(nearPrayer!.at);if(!FACES[pinned])b='home';}setManual(f===b?null:{face:f,at:Date.now()});};
  const isPinned=face===pinned;
  const togglePin=()=>{const value=isPinned?'':face;setPinned(value);store('pinned',value);setManual(null);
   flash(value?(lang==='ar'?`صارت ${faceNames[face].ar} الشاشة الأساسية: أي شاشة تفتحها ترجع إليها بعد ${L.returnAfter} ثانية`:`${faceNames[face].en} is now the main screen: other views return here after ${L.returnAfter} s`):(lang==='ar'?'رجعت الرئيسية الشاشة الأساسية':'Home is the main screen again'));};
