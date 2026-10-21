@@ -10,7 +10,7 @@ export type Memory={year:number;assets:{id:string;date:string}[]};
 export type Prayer={key:string;time:string;at:number};
 export type Prayers={date:string;today:Prayer[];next:Prayer|null;jumua:string[];stale:boolean;source:string};
 export type Lang='ar'|'en';
-export type Ctx={openView:(face:string)=>void;
+export type Ctx={openView:(face:string)=>void;taskFilter:string;setTaskFilter:(id:string)=>void;homeFilter:string;
  now:Date;lang:Lang;connected:boolean;busy:boolean;
  todos:Todo[];taskFolder:string|null;taskAll:boolean;reminders:Reminder[];weather:Weather|null;openWeather:()=>void;memories:Memory[]|null;prayed:Record<string,Record<string,string>>;setPrayed:(date:string,prayer:string,status:string|null)=>void;memIndex:number;setMemIndex:(i:number)=>void;openMemories:()=>void;sides:Record<string,'right'|'left'>;notes:{files:string[];visible:string[];toggle:(file:string)=>void}|null;
  prayers:Prayers|null;prayerFailed:boolean;next:Prayer|null;active:Prayer|null;sunrise:Prayer|null;
@@ -112,7 +112,7 @@ export const sortTasks=(todos:Todo[])=>[...todos].sort((a,b)=>Number(a.done)-Num
 const PRIORITY_LABEL:Record<number,{ar:string;en:string}>={5:{ar:'أولوية قصوى',en:'Highest priority'},4:{ar:'أولوية عالية',en:'High priority'},3:{ar:'أولوية متوسطة',en:'Medium priority'},1:{ar:'أولوية منخفضة',en:'Low priority'},0:{ar:'أدنى أولوية',en:'Lowest priority'}};
 
 // Filters of the tasks view; everything but "all" and "done" shows open tasks only.
-const FILTERS:{id:string;ar:string;en:string;test:(t:Todo,today:string)=>boolean}[]=[
+export const FILTERS:{id:string;ar:string;en:string;test:(t:Todo,today:string)=>boolean}[]=[
  {id:'all',ar:'الكل',en:'All',test:()=>true},
  {id:'today',ar:'اليوم',en:'Today',test:(t,d)=>!t.done&&(!!t.due&&t.due<=d||!!t.scheduled&&t.scheduled<=d)},
  {id:'upcoming',ar:'القادمة',en:'Upcoming',test:(t,d)=>!t.done&&(!!t.due&&t.due>d||!t.due&&!!t.scheduled&&t.scheduled>d)},
@@ -332,7 +332,7 @@ export const WIDGETS:Record<string,{ar:string;en:string;render:(c:Ctx)=>React.Re
  clock:{ar:'الساعة والتاريخ',en:'Clock and date',render:c=><ClockBlock c={c} size="widget"/>},
  next:{ar:'الصلاة القادمة',en:'Next prayer',render:c=><NextPrayer c={c}/>},
  prayers:{ar:'مواقيت اليوم',en:'Today’s prayer times',render:c=><PrayerList c={c} variant="strip"/>},
- tasks:{ar:'المهام',en:'Tasks',render:c=><TaskList c={c} rowHeight={52} editing={false}/>},
+ tasks:{ar:'المهام',en:'Tasks',render:c=><TaskList c={c} rowHeight={52} editing={false} filter={c.homeFilter==='same'?c.taskFilter:c.homeFilter}/>},
  hijri:{ar:'التاريخ الهجري',en:'Hijri date',render:c=><p className="hijri-widget">{hijriText(c.now,c.lang)}</p>},
 };
 
@@ -429,8 +429,6 @@ export function NotePicker({c}:{c:Ctx}){
 
 function TasksFace({c}:{c:Ctx}){
  const [editing,setEditing]=useState(false);
- const [filter,setFilter]=useState(()=>{try{return localStorage.getItem('taskFilter')||'all';}catch{return 'all';}});
- const pick=(id:string)=>{setFilter(id);try{localStorage.setItem('taskFilter',id);}catch{}};
  return <div className="face tasks-face">
   <header>
    <h1>{c.lang==='ar'?'المهام':'Tasks'}</h1>
@@ -438,8 +436,8 @@ function TasksFace({c}:{c:Ctx}){
    <NotePicker c={c}/>
    <button className={'edit-toggle'+(editing?' on':'')} aria-pressed={editing} onClick={()=>setEditing(!editing)}>{editing?(c.lang==='ar'?'تم':'Done'):(c.lang==='ar'?'تعديل المهام':'Edit tasks')}</button>
   </header>
-  <TaskFilters c={c} value={filter} set={pick}/>
-  <TaskList c={c} rowHeight={68} editing={editing} filter={filter}/>
+  <TaskFilters c={c} value={c.taskFilter} set={c.setTaskFilter}/>
+  <TaskList c={c} rowHeight={68} editing={editing} filter={c.taskFilter}/>
  </div>;
 }
 

@@ -3,7 +3,7 @@ import {createRoot} from 'react-dom/client';
 import './style.css';
 import {isNight,type NightSchedule} from '../shared/night.mjs';
 import {THEMES,ACCENTS,applyTheme} from './themes';
-import {gesture,FACES,WIDGETS,WeatherSheet,MemoriesSheet,PullPanel,NoteChips,sideOf,prayerName,type Ctx,type Lang,type Prayers,type Todo,type Reminder,type Weather,type Memory} from './faces';
+import {gesture,FACES,WIDGETS,FILTERS,WeatherSheet,MemoriesSheet,PullPanel,NoteChips,sideOf,prayerName,type Ctx,type Lang,type Prayers,type Todo,type Reminder,type Weather,type Memory} from './faces';
 import {SOUNDS,playSound,unlockAudio} from './sounds';
 
 type Layout={home:string[];auto:boolean;returnAfter:number;prayerBefore:number;prayerAfter:number;theme:string;accent:string;hiddenFiles:string[];sides:Record<string,'right'|'left'>;panel:string[];swipes:Record<Dir,string>;followOmarchy:boolean;reminderSound:string};
@@ -25,6 +25,8 @@ function App(){
  const [now,setNow]=useState(new Date());
  const [prayers,setPrayers]=useState<Prayers|null>(null);const [prayerFailed,setPrayerFailed]=useState(false);
  const [manual,setManual]=useState<{face:string;at:number}|null>(null);const [dismissed,setDismissed]=useState(0);const [pinned,setPinned]=useState(()=>read('pinned',''));
+ // Task filters are per device: the tasks view's, and the home widget's ("same" follows the tasks view).
+ const [taskFilter,setTaskFilter]=useState(()=>read('taskFilter','all'));const [homeFilter,setHomeFilter]=useState(()=>read('homeTaskFilter','same'));
  const [settings,setSettings]=useState(false);const [nightOverride,setNightOverride]=useState(false);
  const [keep,setKeep]=useState(()=>read('keepAwake','true')!=='false');const [wake,setWake]=useState(false);
  const [adhanOn,setAdhanOn]=useState(()=>read('adhan','false')==='true');const [adhanReady,setAdhanReady]=useState(false);const [adhanPlaying,setAdhanPlaying]=useState(false);
@@ -146,7 +148,7 @@ function App(){
  useEffect(()=>{document.documentElement.classList.toggle('blank',blank);document.querySelector('meta[name="theme-color"]')?.setAttribute('content',blank?'#000000':omarchy?.background||(THEMES[L.theme]||THEMES.lapis).colors[0]);},[blank,L.theme,omarchy?.background]);
  const notes=state.tasks?{files:state.tasks.files,visible:state.tasks.visible,toggle:(f:string)=>void mutate('layout','PATCH',{...L,hiddenFiles:L.hiddenFiles.includes(f)?L.hiddenFiles.filter(x=>x!==f):[...L.hiddenFiles.filter(x=>state.tasks!.files.includes(x)),f]})}:null;
  const one=state.tasks?.visible.length===1?state.tasks.visible[0]:'';
- const c:Ctx={openView:(f:string)=>open(f),now,lang,connected,busy,todos:state.todos,taskFolder:state.tasks?(one?one.replace(/\.md$/,''):state.tasks.folder):null,taskAll:!!state.tasks&&state.tasks.visible.length>1,sides:L.sides,notes,reminders:state.reminders,weather,openWeather:()=>setWeatherOpen(true),memories:state.immich?memories:null,prayed:state.prayed,setPrayed:(date,prayer,status)=>void mutate('prayed','PATCH',{date,prayer,status}),memIndex,setMemIndex,openMemories:()=>setMemOpen(true),prayers:today,prayerFailed,next,active,sunrise,adhanPlaying,stopAdhan,mutate};
+ const c:Ctx={openView:(f:string)=>open(f),taskFilter,setTaskFilter:f=>{setTaskFilter(f);store('taskFilter',f);},homeFilter,now,lang,connected,busy,todos:state.todos,taskFolder:state.tasks?(one?one.replace(/\.md$/,''):state.tasks.folder):null,taskAll:!!state.tasks&&state.tasks.visible.length>1,sides:L.sides,notes,reminders:state.reminders,weather,openWeather:()=>setWeatherOpen(true),memories:state.immich?memories:null,prayed:state.prayed,setPrayed:(date,prayer,status)=>void mutate('prayed','PATCH',{date,prayer,status}),memIndex,setMemIndex,openMemories:()=>setMemOpen(true),prayers:today,prayerFailed,next,active,sunrise,adhanPlaying,stopAdhan,mutate};
  const Face=FACES[face];
  return <div className="shell">
   <main className="stage"
@@ -177,12 +179,12 @@ function App(){
     <button className={'pin'+(isPinned?' on':'')} aria-pressed={isPinned} aria-label={isPinned?(lang==='ar'?'إلغاء التثبيت':'Unpin'):(lang==='ar'?'اجعلها الشاشة الأساسية':'Make this the main screen')} onClick={togglePin}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v7"/></svg></button>
    </div>}
   {face==='home'&&t-hints<2500&&<div className="edge-hints" aria-hidden="true">{DIRS.filter(d=>L.swipes[d]!=='none').map(d=><span key={d} className={'hint-'+d}>{faceNames[L.swipes[d]]?.[lang]}</span>)}</div>}
-  {settings&&<Settings {...{c,lang,setLang,state,mutate,busy,connected,keep,setKeep,wake,adhanOn,setAdhanOn,adhanReady,audio,stopAdhan,adhanPlaying}} close={()=>setSettings(false)}/>}
+  {settings&&<Settings {...{c,setHomeFilter:(f:string)=>{setHomeFilter(f);store('homeTaskFilter',f);},lang,setLang,state,mutate,busy,connected,keep,setKeep,wake,adhanOn,setAdhanOn,adhanReady,audio,stopAdhan,adhanPlaying}} close={()=>setSettings(false)}/>}
   {blank&&<button className="blackout" aria-label={lang==='ar'?'المس للرجوع':'Tap to return'} onClick={()=>{setNightOverride(true);if(state.blackout)void mutate('display','PATCH',{blackout:false});}}><span>{lang==='ar'?'المس للرجوع':'Tap to return'}</span></button>}
  </div>;
 }
 
-type SettingsProps={c:Ctx;lang:Lang;setLang:(l:Lang)=>void;state:State;mutate:Ctx['mutate'];busy:boolean;connected:boolean;keep:boolean;setKeep:(v:boolean)=>void;wake:boolean;adhanOn:boolean;setAdhanOn:(v:boolean)=>void;adhanReady:boolean;audio:React.RefObject<HTMLAudioElement|null>;stopAdhan:()=>void;adhanPlaying:boolean;close:()=>void};
+type SettingsProps={c:Ctx;setHomeFilter:(f:string)=>void;lang:Lang;setLang:(l:Lang)=>void;state:State;mutate:Ctx['mutate'];busy:boolean;connected:boolean;keep:boolean;setKeep:(v:boolean)=>void;wake:boolean;adhanOn:boolean;setAdhanOn:(v:boolean)=>void;adhanReady:boolean;audio:React.RefObject<HTMLAudioElement|null>;stopAdhan:()=>void;adhanPlaying:boolean;close:()=>void};
 function Settings(p:SettingsProps){
  const ar=p.lang==='ar';const L=p.state.layout;const locked=p.busy||!p.connected;
  const [night,setNight]=useState(p.state.night);
@@ -206,8 +208,12 @@ function Settings(p:SettingsProps){
    </ol>
    {!!hidden.length&&<div className="widget-add">{hidden.map(w=><button key={w} disabled={locked} onClick={()=>saveLayout({home:[...L.home,w]})}>+ {WIDGETS[w][p.lang]}</button>)}</div>}
 
+   <h3>{ar?'المهام':'Tasks'}</h3>
+   <label className="field">{ar?'فلتر المهام في الرئيسية':'Home tasks filter'}<select value={p.c.homeFilter} onChange={e=>p.setHomeFilter(e.target.value)}>
+    <option value="same">{ar?'نفس فلتر شاشة المهام':'Same as the tasks view'}</option>
+    {FILTERS.map(f=><option key={f.id} value={f.id}>{f[p.lang]}</option>)}
+   </select></label>
    {p.state.tasks&&<>
-    <h3>{ar?'المهام':'Tasks'}</h3>
     <NoteChips c={p.c}/>
     <p className="hint">{ar?'اضغط على ملاحظة لإخفاء مهامها أو إظهارها. الترتيب حسب أولوية Tasks (🔺 ⏫ 🔼 🔽 ⏬) ثم تاريخ 📅. المهام الجديدة تُضاف للملاحظة الافتراضية إذا كانت ظاهرة، وإلا لأول ملاحظة ظاهرة.':'Tap a note to hide or show its tasks. Sorted by Tasks priority (🔺 ⏫ 🔼 🔽 ⏬), then 📅 due date. New tasks go to the default note while shown, otherwise to the first shown note.'}</p>
    </>}
