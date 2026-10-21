@@ -465,3 +465,5 @@ html[dir=ltr] .task-text,html[dir=ltr] .task-text>span{text-align:left}
 .task-filters button{flex:none;min-height:40px;padding:4px 14px;border-radius:999px;font-size:15px;color:var(--muted);border:1px solid var(--line);display:flex;align-items:center;gap:6px}
 .task-filters button b{font-weight:400;font-variant-numeric:tabular-nums;opacity:.75}
 .task-filters button.on{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.task-filters .hide-done{margin-inline-start:auto;border-style:dashed}
+.task-filters .hide-done.on{border-style:solid}

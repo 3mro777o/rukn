@@ -211,7 +211,8 @@ function Settings(p:SettingsProps){
    <h3>{ar?'المهام':'Tasks'}</h3>
    <label className="field">{ar?'فلتر المهام في الرئيسية':'Home tasks filter'}<select value={p.c.homeFilter} onChange={e=>p.setHomeFilter(e.target.value)}>
     <option value="same">{ar?'نفس فلتر شاشة المهام':'Same as the tasks view'}</option>
-    {FILTERS.map(f=><option key={f.id} value={f.id}>{f[p.lang]}</option>)}
+    <option value="">{ar?'الكل':'All'}</option><option value="hide">{ar?'الكل بدون المنجزة':'All except done'}</option>
+    {FILTERS.map(f=><option key={f.id} value={f.id+(f.id==='done'?'':',hide')}>{f[p.lang]}</option>)}
    </select></label>
    {p.state.tasks&&<>
     <NoteChips c={p.c}/>

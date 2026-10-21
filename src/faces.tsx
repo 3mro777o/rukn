@@ -111,28 +111,38 @@ function dueText(due:string,c:Ctx){
 export const sortTasks=(todos:Todo[])=>[...todos].sort((a,b)=>Number(a.done)-Number(b.done)||(b.priority??2)-(a.priority??2)||(a.due||'9999').localeCompare(b.due||'9999'));
 const PRIORITY_LABEL:Record<number,{ar:string;en:string}>={5:{ar:'أولوية قصوى',en:'Highest priority'},4:{ar:'أولوية عالية',en:'High priority'},3:{ar:'أولوية متوسطة',en:'Medium priority'},1:{ar:'أولوية منخفضة',en:'Low priority'},0:{ar:'أدنى أولوية',en:'Lowest priority'}};
 
-// Filters of the tasks view; everything but "all" and "done" shows open tasks only.
+// Task filters combine: a spec is ids joined by commas ("today,high,hide"). Date chips match any of them,
+// the other chips must all match; "hide" hides done tasks unless "done" is chosen. "" or "all" shows everything.
+const DATES=['today','upcoming','nodate'];
 export const FILTERS:{id:string;ar:string;en:string;test:(t:Todo,today:string)=>boolean}[]=[
- {id:'all',ar:'الكل',en:'All',test:()=>true},
- {id:'today',ar:'اليوم',en:'Today',test:(t,d)=>!t.done&&(!!t.due&&t.due<=d||!!t.scheduled&&t.scheduled<=d)},
- {id:'upcoming',ar:'القادمة',en:'Upcoming',test:(t,d)=>!t.done&&(!!t.due&&t.due>d||!t.due&&!!t.scheduled&&t.scheduled>d)},
- {id:'nodate',ar:'بلا تاريخ',en:'No date',test:t=>!t.done&&!t.due&&!t.scheduled},
- {id:'high',ar:'أولوية عالية',en:'High priority',test:t=>!t.done&&(t.priority??2)>=4},
- {id:'repeat',ar:'متكررة',en:'Repeating',test:t=>!t.done&&!!t.recurring},
+ {id:'today',ar:'اليوم',en:'Today',test:(t,d)=>!!t.due&&t.due<=d||!!t.scheduled&&t.scheduled<=d},
+ {id:'upcoming',ar:'القادمة',en:'Upcoming',test:(t,d)=>!!t.due&&t.due>d||!t.due&&!!t.scheduled&&t.scheduled>d},
+ {id:'nodate',ar:'بلا تاريخ',en:'No date',test:t=>!t.due&&!t.scheduled},
+ {id:'high',ar:'أولوية عالية',en:'High priority',test:t=>(t.priority??2)>=4},
+ {id:'repeat',ar:'متكررة',en:'Repeating',test:t=>!!t.recurring},
  {id:'done',ar:'المنجزة',en:'Done',test:t=>t.done},
 ];
-export function TaskFilters({c,value,set}:{c:Ctx;value:string;set:(id:string)=>void}){
- const today=berlinDay(c.now);
+export function matchFilter(spec:string,today:string){
+ const on=new Set(spec.split(','));const chips=FILTERS.filter(f=>on.has(f.id));
+ const dates=chips.filter(f=>DATES.includes(f.id)),rest=chips.filter(f=>!DATES.includes(f.id));
+ return (t:Todo)=>(on.has('done')||!on.has('hide')||!t.done)&&(!dates.length||dates.some(f=>f.test(t,today)))&&rest.every(f=>f.test(t,today));
+}
+export function TaskFilters({c,value,set}:{c:Ctx;value:string;set:(spec:string)=>void}){
+ const today=berlinDay(c.now);const on=new Set(value.split(',').filter(x=>x&&x!=='all'));
+ const toggle=(id:string)=>{const next=new Set(on);if(next.has(id))next.delete(id);else next.add(id);set([...next].join(','));};
+ const chosen=FILTERS.some(f=>on.has(f.id));const hide=on.has('hide');
+ const count=(spec:string)=>c.todos.filter(matchFilter(spec,today)).length;
  return <div className="task-filters" role="group" aria-label={c.lang==='ar'?'تصفية المهام':'Filter tasks'}>
-  {FILTERS.map(f=><button key={f.id} className={value===f.id?'on':''} aria-pressed={value===f.id} onClick={()=>set(f.id)}>{f[c.lang]} <b dir="ltr">{c.todos.filter(t=>f.test(t,today)).length}</b></button>)}
+  <button className={chosen?'':'on'} aria-pressed={!chosen} onClick={()=>set(hide?'hide':'')}>{c.lang==='ar'?'الكل':'All'} <b dir="ltr">{count(hide?'hide':'')}</b></button>
+  {FILTERS.map(f=><button key={f.id} className={on.has(f.id)?'on':''} aria-pressed={on.has(f.id)} onClick={()=>toggle(f.id)}>{f[c.lang]} <b dir="ltr">{count(f.id+(hide?',hide':''))}</b></button>)}
+  <button className={'hide-done'+(hide?' on':'')} aria-pressed={hide} onClick={()=>toggle('hide')}>{c.lang==='ar'?'إخفاء المنجزة':'Hide done'}</button>
  </div>;
 }
 
 // The list scrolls (swipe it up or down, or use the wheel); the rows are sorted, not paged.
 export function TaskList({c,rowHeight,editing,filter='all'}:{c:Ctx;rowHeight:number;editing:boolean;filter?:string}){
  const [text,setText]=useState('');
- const test=(FILTERS.find(f=>f.id===filter)||FILTERS[0]).test;
- const shown=sortTasks(c.todos.filter(t=>test(t,berlinDay(c.now))));const left=c.todos.filter(t=>!t.done).length;
+ const shown=sortTasks(c.todos.filter(matchFilter(filter,berlinDay(c.now))));const left=c.todos.filter(t=>!t.done).length;
  const locked=c.busy||!c.connected;const today=berlinDay(c.now);
  return <div className="tasks" style={{['--row' as string]:rowHeight+'px'}}>
   {editing&&<form className="task-add" onSubmit={async e=>{e.preventDefault();if(text.trim()&&await c.mutate('todos','POST',{title:text}))setText('');}}>
