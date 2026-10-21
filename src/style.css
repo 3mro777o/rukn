@@ -460,3 +460,8 @@ html[dir=ltr] .task-text,html[dir=ltr] .task-text>span{text-align:left}
 .task-text:has(small)>span{display:block;white-space:nowrap;text-overflow:ellipsis}
 .task-text small{width:100%;justify-content:flex-start}
 .task-list.scrolls{padding-right:14px}
+/* Round 18: task filters */
+.task-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;flex:none}
+.task-filters button{flex:none;min-height:40px;padding:4px 14px;border-radius:999px;font-size:15px;color:var(--muted);border:1px solid var(--line);display:flex;align-items:center;gap:6px}
+.task-filters button b{font-weight:400;font-variant-numeric:tabular-nums;opacity:.75}
+.task-filters button.on{background:var(--accent);border-color:var(--accent);color:var(--bg)}

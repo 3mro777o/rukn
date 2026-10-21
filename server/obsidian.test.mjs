@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync,rmSync,writeFileSync,readFileSync,mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {createObsidianTasks,parseTask,parseReminders,REMINDER_TEMPLATE} from './obsidian.mjs';
+import {createObsidianTasks,parseTask,parseReminders,nextRecurrence,REMINDER_TEMPLATE} from './obsidian.mjs';
 test('reads, adds, toggles, renames and removes tasks across a folder without touching other lines',()=>{
  const base=mkdtempSync(join(tmpdir(),'rukn-md-'));const dir=join(base,'X');mkdirSync(dir);const file=join(dir,'todo.md');mkdirSync(join(dir,'sub'));
  writeFileSync(file,'# Notes\nfree text\n- [ ] شراء خبز ⏫ 📅 2026-10-25\n  - [x] nested done ✅ 2026-10-01\n- plain bullet');
@@ -43,4 +43,22 @@ test('parses reminder lines',()=>{
  assert.deepEqual(parseReminders(REMINDER_TEMPLATE),[],'template examples stay inactive');
  const r=parseReminders('# t\n- 9:05 Vitamins\n- الجمعة،sat 12:30 Laundry\n- 2026-10-22 14:00 Dentist\n- [x] 10:00 off\n- daily 07:00 Walk\n- someday 10:00 bad\ntext 10:00 no dash');
  assert.deepEqual(r.map(({id,...x})=>x),[{days:null,time:'09:05',text:'Vitamins'},{days:[5,6],time:'12:30',text:'Laundry'},{date:'2026-10-22',time:'14:00',text:'Dentist'},{days:null,time:'07:00',text:'Walk'}]);
+});
+test('completing a recurring task adds the next one above it, like the Tasks plugin',()=>{
+ assert.equal(nextRecurrence('Quran 🔁 every day'),'Quran 🔁 every day');
+ assert.equal(nextRecurrence('Bills 🔁 every month on the 15th ⏳ 2026-10-10 📅 2026-10-15','2026-10-21'),'Bills 🔁 every month on the 15th ⏳ 2026-11-10 📅 2026-11-15');
+ assert.equal(nextRecurrence('Run 🔁 every 2 days when done 📅 2026-10-01','2026-10-21'),'Run 🔁 every 2 days when done 📅 2026-10-23');
+ assert.equal(nextRecurrence('Gym 🔁 every week on Monday, Friday 📅 2026-10-23'),'Gym 🔁 every week on Monday, Friday 📅 2026-10-26');
+ assert.equal(nextRecurrence('Odd 🔁 sometimes maybe 📅 2026-10-23'),null);
+ const dir=mkdtempSync(join(tmpdir(),'rukn-rec-'));const file=join(dir,'t.md');
+ writeFileSync(file,'# x\n  - [ ] Water plants 🔁 every 3 days 📅 2026-10-21\n- [ ] once\n');
+ const tasks=createObsidianTasks({sources:[dir],defaultFile:file},()=>{});
+ try{
+  const [plant,once]=tasks.list();
+  assert.equal(tasks.update(plant.id,{done:true}),1);tasks.update(once.id,{done:true});
+  const lines=readFileSync(file,'utf8').split('\n');
+  assert.equal(lines[1],'  - [ ] Water plants 🔁 every 3 days 📅 2026-10-24');
+  assert.match(lines[2],/^  - \[x\] Water plants 🔁 every 3 days 📅 2026-10-21 ✅ \d{4}-\d{2}-\d{2}$/);
+  assert.match(lines[3],/^- \[x\] once ✅/);assert.equal(lines.length,5);
+ }finally{tasks.close();rmSync(dir,{recursive:true});}
 });

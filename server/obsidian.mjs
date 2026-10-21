@@ -1,6 +1,7 @@
 import {readFileSync,writeFileSync,renameSync,existsSync,readdirSync,statSync,watch} from 'node:fs';
 import {join,relative,dirname,basename,sep} from 'node:path';
 import {createHash} from 'node:crypto';
+import rrule from 'rrule';
 const TASK=/^(\s*[-*+] \[)(.)(\] )(.*)$/;
 const hash=s=>createHash('sha1').update(s).digest('hex').slice(0,8);
 // Obsidian Tasks plugin metadata; the description is everything before the first signifier.
@@ -13,6 +14,19 @@ export function parseTask(text){
  return {title,meta,priority:p?PRIORITY[p]:2,due:DATE('📅',meta),scheduled:DATE('⏳',meta),start:DATE('🛫',meta),recurring:meta.includes('🔁')};
 }
 const berlinToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin'}).format(new Date());
+// The next occurrence of a 🔁 task, like the Tasks plugin: rrule text from the reference date (due, else scheduled,
+// else start; today with "when done"); the other dates keep their distance. null when the rule is not understood.
+const day=s=>new Date(s+'T00:00:00Z');const iso=d=>d.toISOString().slice(0,10);
+export function nextRecurrence(text,today=berlinToday()){
+ const t=parseTask(text);const rule=t.meta.match(/🔁\uFE0F?\s*([^🔺⏫🔼🔽⏬📅⏳🛫✅➕❌🆔⛔]+)/u)?.[1].trim();if(!rule)return null;
+ const whenDone=/\s*when done$/i.test(rule);
+ let next=text.replace(/\s*✅\uFE0F?\s*\d{4}-\d{2}-\d{2}/u,'');
+ const ref=t.due||t.scheduled||t.start;if(!ref)return next;
+ try{const start=day(whenDone?today:ref);const o=rrule.RRule.parseText(rule.replace(/\s*when done$/i,''));if(!o)return null;const r=new rrule.RRule({...o,dtstart:start});
+  const at=r.after(start,false);if(!at)return null;const shift=at.getTime()-day(ref).getTime();
+  return next.replace(/([📅⏳🛫])\uFE0F?(\s*)(\d{4}-\d{2}-\d{2})/gu,(_,e,s,d)=>e+s+iso(new Date(day(d).getTime()+shift)));
+ }catch{return null;}
+}
 
 // Tasks are `- [ ]` lines in Markdown files: every source is a file or a folder (read with its subfolders).
 // Everything else in those files is left untouched. Files are named relative to the sources' common parent.
@@ -48,10 +62,13 @@ export function createObsidianTasks({sources,defaultFile,exclude=[]},onChange){
   files,list,
   add(title,target=relDefault){const rel=target;const text=read(rel);write(rel,text+(text&&!text.endsWith('\n')?'\n':'')+`- [ ] ${title.replace(/\s+/g,' ')}\n`);return list([rel]).at(-1)?.id;},
   // Completing stamps ✅ date like the Tasks plugin; editing the title keeps the metadata.
-  update:(id,{done,title})=>change(id,(all,i)=>{all[i]=all[i].replace(TASK,(_,a,c,b,text)=>{
+  // Completing a 🔁 task adds its next occurrence on the line above, as the Tasks plugin does.
+  update:(id,{done,title})=>change(id,(all,i)=>{const m=all[i].match(TASK);const again=done&&m[2]===' '&&parseTask(m[4]).recurring?nextRecurrence(m[4]):null;
+   all[i]=all[i].replace(TASK,(_,a,c,b,text)=>{
    let mark=c;if(done!==undefined){mark=done?'x':' ';text=text.replace(/\s*✅\s*\d{4}-\d{2}-\d{2}/u,'');if(done)text=text.trimEnd()+` ✅ ${berlinToday()}`;}
    if(title!==undefined){const t=parseTask(text);text=title.replace(/\s+/g,' ')+(t.meta?' '+t.meta:'');}
-   return a+mark+b+text;});}),
+   return a+mark+b+text;});
+   if(again)all.splice(i,0,m[1]+' '+m[3]+again);}),
   remove:id=>change(id,(all,i)=>all.splice(i,1)),
   defaultFile:relDefault,
   close(){clearTimeout(timer);for(const w of watchers)w.close();},
