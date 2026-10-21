@@ -1,0 +1,462 @@
+/* Colors come from src/themes.ts; these are the Lapis defaults before it loads. */
+:root{
+  --bg:#0f1a2e;--surface:#17253d;--line:#26385a;--text:#eee5cf;--muted:#8e9ab3;--accent:#ddb463;--ok:#7cc4a6;--err:#ec8f96;
+  --ui:"Readex Pro",system-ui,-apple-system,sans-serif;
+  --kufi:"Reem Kufi","Readex Pro",system-ui,sans-serif;
+  font-family:var(--ui);color:var(--text);background:var(--bg);color-scheme:dark;font-synthesis:none;-webkit-text-size-adjust:100%;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;background:transparent;border:1px solid var(--line);border-radius:10px;min-height:44px;padding:8px 16px}
+button:disabled{opacity:.4;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+time,.task-foot,.dial-center em{font-variant-numeric:tabular-nums}
+.quiet{color:var(--muted);font-size:15px;margin:0}.warn{color:var(--err)}.ok{color:var(--ok)}
+
+/* Stage: one view fills the screen. */
+.shell{height:100vh;height:100dvh;padding:max(28px,env(safe-area-inset-top)) max(36px,env(safe-area-inset-right)) calc(68px + env(safe-area-inset-bottom)) max(36px,env(safe-area-inset-left))}
+.stage{height:100%;touch-action:pan-y}
+.face{height:100%;min-height:0;animation:arrive .35s ease-out}
+@keyframes arrive{from{opacity:0}}
+html,body,#root{height:100%;overflow:hidden;overscroll-behavior:none}
+
+/* Clock */
+.clock-time{display:block;font-weight:300;line-height:.9;letter-spacing:-.03em;direction:ltr}
+.clock-date{margin:18px 0 0;font-size:24px}
+.clock-hijri{margin:6px 0 0;font-size:19px;color:var(--muted)}
+.clock-block.widget .clock-time{font-size:clamp(96px,15vw,168px)}
+.clock-block.face{text-align:center}
+.clock-block.face .clock-time{font-size:min(30vw,44vh);font-weight:200}
+.clock-block.face .clock-date{font-size:32px;margin-top:28px}
+.clock-block.face .clock-hijri{font-size:24px}
+.clock-face{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:48px}
+.clock-next .next-prayer{justify-content:center}
+
+/* Next prayer */
+.next-prayer{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 16px}
+.next-prayer span{color:var(--muted);font-size:16px;width:100%}
+.clock-next .next-prayer span{width:auto}
+.next-prayer strong{font-family:var(--kufi);font-weight:600;font-size:40px;color:var(--accent);line-height:1.1}
+.next-prayer em{font-style:normal;font-size:30px}
+.next-prayer b{font-weight:400;font-size:20px;color:var(--muted)}
+.next-prayer.now strong{font-size:48px}
+
+/* Prayer times */
+.prayer-list{list-style:none;margin:0;padding:0}
+.prayer-list li.past{color:var(--muted)}
+.prayer-list li.sunrise{color:var(--muted)}
+.prayer-list li.next{color:var(--accent)}
+.prayer-list li.active{color:var(--bg);background:var(--accent)}
+.prayer-list span{font-family:var(--kufi)}
+.prayer-list.strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.prayer-list.strip li{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border-radius:8px;border-top:2px solid transparent}
+.prayer-list.strip li.next{border-top-color:var(--accent);border-radius:0}
+.prayer-list.strip span{font-size:15px}
+.prayer-list.strip time{font-size:26px}
+.prayer-list.column li{display:flex;justify-content:space-between;align-items:baseline;padding:10px 18px;border-radius:12px}
+.prayer-list.column span{font-size:28px}
+.prayer-list.column time{font-size:40px;font-weight:300}
+.prayer-list.column li.sunrise span,.prayer-list.column li.sunrise time{font-size:22px}
+
+/* Tasks */
+.tasks{display:flex;flex-direction:column;height:100%;min-height:0}
+.task-list{list-style:none;margin:0;padding:0;flex:1;min-height:0;overflow:hidden}
+.task-list li{height:var(--row);display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--line)}
+.task-list li>span{flex:1;font-size:calc(var(--row) * .34);line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.task-list li.done>span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.task-list li.empty{border:0;color:var(--muted);font-size:17px;height:auto;padding:16px 0}
+.check{flex:none;width:44px;height:44px;min-height:0;padding:0;border:0;display:grid;place-items:center}
+.check svg{width:28px;height:28px;border:2px solid var(--muted);border-radius:50%;fill:none;stroke:transparent;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;padding:3px}
+.done .check svg{background:var(--ok);border-color:var(--ok);stroke:var(--bg)}
+.remove{border:0;font-size:28px;color:var(--muted);padding:0;width:44px}
+.task-foot{display:flex;align-items:center;justify-content:space-between;min-height:48px;color:var(--muted);font-size:15px;flex:none}
+.task-foot nav{display:flex;align-items:center;gap:8px}
+.task-foot nav button{width:44px;padding:0;font-size:20px;line-height:1}
+.task-add{display:flex;gap:8px;margin-bottom:8px;flex:none}
+.task-add input{flex:1;min-width:0;min-height:52px;padding:0 16px;font-size:19px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.task-add input::placeholder{color:var(--muted)}
+.task-add button,.primary{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:500}
+
+/* Home: the first widget takes the large half, the rest stack beside it, divided by hairlines. */
+.home{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px}
+.home.single{grid-template-columns:1fr}
+.home .hero{display:flex;flex-direction:column;justify-content:center;min-height:0}
+.home-side{display:flex;flex-direction:column;min-height:0}
+.home-side .w{padding:20px 0;border-bottom:1px solid var(--line);flex:none}
+.home-side .w:first-child{padding-top:0}
+.home-side .w:last-child{border-bottom:0}
+.home-side .w-tasks{flex:1;min-height:120px;padding-bottom:0}
+.hero.w-tasks{justify-content:stretch}
+.hero.w-prayers .prayer-list.strip time{font-size:40px}
+.hero.w-next .next-prayer strong{font-size:72px}
+.hijri-widget{margin:0;font-family:var(--kufi);font-size:26px;color:var(--muted)}
+.hero .hijri-widget{font-size:48px;color:var(--text)}
+
+/* Prayer face: the dial is the one bold thing on the dashboard. */
+.prayer-face{display:grid;grid-template-columns:auto minmax(0,1fr);gap:48px;align-items:center}
+.dial-wrap{position:relative;height:100%;aspect-ratio:540/480;max-height:100%;max-width:58vw;justify-self:center}
+.dial{display:block;width:100%;height:100%;overflow:visible}
+.dial-night{fill:none;stroke:var(--line);stroke-width:2}
+.dial-day{fill:none;stroke:var(--text);stroke-width:5;stroke-linecap:round;opacity:.8}
+.tick{stroke:var(--line);stroke-width:2}.tick.major{stroke:var(--muted)}
+.mark circle{fill:var(--bg);stroke:var(--text);stroke-width:2.5}
+.mark text{fill:var(--muted);font-family:var(--kufi);font-size:19px}
+.mark.sunrise circle{stroke:var(--muted)}
+.mark.next circle,.mark.active circle{fill:var(--accent);stroke:var(--accent)}
+.mark.next text,.mark.active text{fill:var(--accent);font-weight:600}
+.hand{stroke:var(--accent);stroke-width:3;stroke-linecap:round}
+.hand-tip{fill:var(--accent)}
+.dial-center{position:absolute;inset:30% 32%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px}
+.dial-center span{color:var(--muted);font-size:17px}
+.dial-center strong{font-family:var(--kufi);font-weight:600;font-size:clamp(40px,6vw,64px);color:var(--accent);line-height:1.15}
+.dial-center em{font-style:normal;font-size:clamp(28px,4vw,40px)}
+.stop-adhan{margin-top:10px;border-color:var(--accent);color:var(--accent)}
+.prayer-side{min-width:0}
+.mosque{color:var(--muted);font-size:15px;margin:18px 18px 0}
+@media(prefers-reduced-motion:no-preference){.mark.active circle{animation:breathe 2.4s ease-in-out infinite}}
+@keyframes breathe{50%{opacity:.45}}
+
+/* Tasks face */
+.tasks-face{display:flex;flex-direction:column;max-width:880px;margin:0 auto}
+.tasks-face header{display:flex;align-items:baseline;gap:16px;margin-bottom:12px;flex:none}
+.tasks-face h1{margin:0;font-family:var(--kufi);font-weight:600;font-size:40px}
+.source{color:var(--muted);font-size:14px}
+.edit-toggle{margin-inline-start:auto}.edit-toggle.on{border-color:var(--accent);color:var(--accent)}
+
+.link{width:7px;height:7px;border-radius:50%;background:var(--err);margin-inline:6px}
+.link.live{background:var(--ok)}
+.adhan-hint{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:14px;color:var(--accent);background:var(--surface);padding:6px 14px;border-radius:14px}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);margin:0;padding:12px 18px;border-radius:12px;background:var(--surface);border:1px solid var(--err);color:var(--err);z-index:60;max-width:90vw}
+
+/* Settings sheet, used from the desk; it may scroll. */
+.sheet-backdrop{position:fixed;inset:0;z-index:50;background:color-mix(in srgb,var(--bg) 70%,transparent)}
+.sheet{position:absolute;inset-block:0;inset-inline-end:0;width:min(480px,100%);overflow-y:auto;overscroll-behavior:contain;background:var(--surface);padding:24px 28px calc(32px + env(safe-area-inset-bottom));border-inline-start:1px solid var(--line)}
+.sheet header{display:flex;align-items:center;justify-content:space-between}
+.sheet h2{margin:0;font-family:var(--kufi);font-weight:600;font-size:28px}
+.sheet h3{margin:28px 0 8px;font-size:18px;font-weight:500;color:var(--accent)}
+.sheet .close{border:0;font-size:30px;width:44px;padding:0}
+.hint{color:var(--muted);font-size:14px;line-height:1.6;margin:6px 0}
+.widget-order{list-style:none;margin:8px 0;padding:0}
+.widget-order li{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--line)}
+.widget-order li span{flex:1}
+.widget-order li:first-child span{color:var(--accent)}
+.widget-order button{min-height:40px;padding:4px 12px}
+.widget-add{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.toggle{display:flex;align-items:center;gap:12px;min-height:44px}
+.toggle input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.fields{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);flex:1;min-width:110px}
+.field input{min-height:44px;padding:0 10px;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--text)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:8px 0}
+
+.blackout{position:fixed;inset:-50vh -50vw;width:auto;height:auto;border:0;border-radius:0;background:#000;z-index:100;display:grid;place-items:center;color:#333}
+.blackout span{opacity:0}.blackout:focus-visible span{opacity:1}
+
+/* Short landscape screens */
+@media(max-height:700px) and (orientation:landscape){
+  .shell{padding-top:max(18px,env(safe-area-inset-top));padding-bottom:calc(62px + env(safe-area-inset-bottom))}
+  .prayer-list.column li{padding:6px 18px}.prayer-list.column time{font-size:34px}.prayer-list.column span{font-size:24px}
+  .home-side .w{padding:14px 0}
+}
+/* Phones and portrait: stack, and allow scrolling. */
+@media(max-width:760px),(orientation:portrait){
+  html,body,#root{height:auto;overflow:auto}
+  .shell{height:auto;min-height:100dvh;padding-inline:18px}
+  .face{height:auto}
+  .home,.prayer-face{grid-template-columns:1fr;gap:28px}
+  .home-side .w-tasks{min-height:420px}
+  .dial-wrap{height:auto;width:min(100%,520px);max-width:none}
+  .clock-face{min-height:70dvh}
+  .clock-block.face .clock-time{font-size:28vw}
+  .prayer-list.strip time{font-size:20px}.prayer-list.strip span{font-size:13px}
+  .tasks-face .tasks{height:70dvh}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+html.blank,html.blank body{background:#000}
+.task-list li input.title{flex:1;min-width:0;height:calc(var(--row) - 14px);font-size:calc(var(--row) * .34);padding:0 12px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.theme-grid button{display:flex;align-items:center;gap:10px;padding:8px 10px;text-align:start;font-size:14px}
+.theme-grid button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.swatch{display:flex;flex:none;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.swatch i{width:12px;height:22px}
+
+/* Prayer time: the name fills the screen for 5 seconds, then fades away. */
+.announce{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;background:var(--bg);pointer-events:none;animation:announce 5s ease-in-out forwards}
+.announce strong{font-family:var(--kufi);font-weight:700;font-size:min(16vw,34vh);line-height:1.1;color:var(--accent)}
+.announce span{font-size:min(8vw,12vh);color:var(--text)}
+@keyframes announce{0%{opacity:0}8%,80%{opacity:1}100%{opacity:0}}
+.toast.note{border-color:var(--accent);color:var(--text);top:auto;bottom:calc(76px + env(safe-area-inset-bottom));text-align:center}
+.accent-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.accent-row .dot{width:32px;height:32px;min-height:0;padding:0;border-radius:50%;border:2px solid var(--surface)}
+.accent-row .dot.on{box-shadow:0 0 0 2px var(--text)}
+.accent-row button.on:not(.dot){border-color:var(--accent);color:var(--accent)}
+
+/* Tasks plugin metadata */
+.task-text{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.task-text>span{font-size:calc(var(--row) * .32);line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.task-list li.done .task-text>span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.task-text small{display:flex;gap:10px;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden}
+.due.today{color:var(--accent)}.due.late{color:var(--err)}
+.prio{flex:none;width:4px;align-self:stretch;margin-block:14px;border-radius:2px;background:var(--line)}
+.p5 .prio{background:var(--err)}.p4 .prio{background:var(--accent)}.p3 .prio{background:var(--text);opacity:.6}
+.p1 .prio,.p0 .prio{background:transparent;border-inline-start:2px dashed var(--muted);width:0}
+.done .prio{opacity:.3}
+.task-list li input.title{width:100%}
+select{min-height:44px;padding:0 10px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;font:inherit}
+.muted-grid{opacity:.45}
+
+/* Weather */
+.wi{width:1em;height:1em;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wi-sun{stroke:var(--accent);stroke-width:1.8}.wi-moon{stroke:var(--text);stroke-width:1.6}
+.wi-cloud{fill:var(--surface);stroke:var(--text);stroke-width:1.5}.wi-line{stroke:var(--muted);stroke-width:1.5}
+.wi-rain{stroke:#7fb5ff;stroke-width:1.8}.wi-snow{stroke:var(--text);stroke-width:3}.wi-bolt{stroke:var(--accent);stroke-width:1.8}
+.weather-now{display:flex;align-items:center;gap:16px;border:0;padding:0;text-align:start;width:100%;font-size:56px}
+.weather-now strong{font-size:52px;font-weight:300;line-height:1}
+.weather-now span{display:flex;flex-direction:column;font-size:17px;gap:2px}
+.weather-now b{font-weight:400}.weather-now em{font-style:normal;color:var(--muted);font-size:15px}
+.hero .weather-now{font-size:140px;flex-wrap:wrap}.hero .weather-now strong{font-size:120px}.hero .weather-now span{font-size:24px}
+.pop-backdrop{position:fixed;inset:0;z-index:55;background:color-mix(in srgb,var(--bg) 75%,transparent);display:grid;place-items:center;padding:24px}
+.pop{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px 28px;width:min(980px,100%);max-height:100%;overflow:auto}
+.weather-pop header{display:flex;align-items:center;gap:20px;font-size:76px}
+.weather-pop header>div{display:flex;flex-direction:column}
+.weather-pop header strong{font-size:64px;font-weight:300;line-height:1}
+.weather-pop header span{font-size:18px;color:var(--muted)}
+.weather-pop dl{display:flex;gap:22px;margin:0 auto 0 0;font-size:15px}
+[dir=rtl] .weather-pop dl{margin:0 0 0 auto}
+.weather-pop dt{color:var(--muted)}.weather-pop dd{margin:2px 0 0;font-size:20px}
+.weather-pop .close{border:0;font-size:30px;width:44px;padding:0;align-self:flex-start}
+.hours{list-style:none;display:flex;gap:4px;margin:22px 0 8px;padding:0 0 8px;overflow-x:auto;scroll-snap-type:x mandatory}
+.hours li{flex:0 0 64px;display:flex;flex-direction:column;align-items:center;gap:6px;scroll-snap-align:start;padding:10px 0;border-radius:14px}
+.hours li:first-child{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.hours time{font-size:14px;color:var(--muted)}
+.hours .wi{font-size:30px}
+.hours .t{font-size:20px;height:58px;display:flex;align-items:flex-end;padding-bottom:calc(var(--lift) * 34px)}
+.hours .rain{position:relative;width:8px;height:40px;border-radius:4px;background:var(--line);display:flex;align-items:flex-end;overflow:visible}
+.hours .rain i{display:block;width:100%;background:#7fb5ff;border-radius:4px}
+.hours .rain b{position:absolute;top:44px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:400;color:#7fb5ff}
+.hours li{padding-bottom:24px}
+
+/* Reminders */
+.reminder-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.reminder-list li{display:flex;gap:14px;align-items:baseline;font-size:18px}
+.reminder-list time{color:var(--accent);font-size:20px}
+.reminder-alert{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;text-align:center}
+.reminder-alert svg{width:72px;height:72px;fill:none;stroke:var(--accent);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+@media(prefers-reduced-motion:no-preference){.reminder-alert svg{animation:ring 1s ease-in-out 3}}
+@keyframes ring{25%{transform:rotate(12deg)}75%{transform:rotate(-12deg)}}
+.reminder-alert time{font-size:28px;color:var(--muted)}
+.reminder-alert strong{font-family:var(--kufi);font-size:min(9vw,15vh);line-height:1.2;max-width:90%;overflow-wrap:anywhere}
+.reminder-alert .row{gap:14px;margin-top:20px}.reminder-alert button{min-height:56px;padding:0 28px;font-size:19px}
+
+/* Immich memories */
+.memory{position:relative;margin:0;height:100%;min-height:180px;border-radius:16px;overflow:hidden;background:var(--surface)}
+.memory img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:arrive 1.2s ease-out}
+.memory figcaption{position:absolute;inset-inline:0;bottom:0;display:flex;justify-content:space-between;padding:28px 16px 12px;font-size:17px;color:#fff;background:linear-gradient(transparent,rgb(0 0 0 / 60%))}
+.memory.big{border-radius:0;background:transparent}
+.memory.big img{object-fit:contain}
+.memory.big figcaption{font-size:24px;background:none;color:var(--text);padding:0 8px 4px;justify-content:center;gap:16px}
+.memories-face{display:flex}
+.memories-face .memory{flex:1}
+.home-side .w-memories{flex:1;min-height:160px}
+.home-side .w-tasks+.w-memories,.home-side .w-memories+.w-tasks{flex:1}
+
+/* Round 6: calmer task rows, a side column that never runs under the dock */
+.task-text:has(small)>span{-webkit-line-clamp:1}
+.task-text small{font-size:12px}
+.task-list li{gap:12px}
+.home-side{overflow:hidden}
+.home-side .w-tasks,.home-side .w-memories{flex:1 1 0;min-height:0}
+.home-side .w-memories .memory{min-height:0}
+.home-side .clock-block.widget .clock-time{font-size:clamp(64px,9vw,104px)}
+.home-side .clock-block.widget .clock-date{margin-top:10px;font-size:19px}
+.home-side .hero.w-tasks,.home .hero.w-tasks{justify-content:flex-start}
+.sunrise-line{display:block;width:100%;font-size:15px;color:var(--muted)}
+.dial-center .sunrise-line{width:auto;margin-top:6px}
+
+/* Round 8 */
+.home{grid-template-columns:repeat(2,minmax(0,1fr))}
+.home.single{grid-template-columns:1fr}
+.memory{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.memory figcaption,.memory.big figcaption{left:auto;right:0;inset-inline:auto;width:auto;flex-direction:column;align-items:flex-end;gap:2px;padding:28px 18px 14px 40px;text-align:right;color:#fff;background:linear-gradient(transparent,rgb(0 0 0 / 55%));border-top-left-radius:14px}
+.memory figcaption strong{font-weight:500;font-size:1.1em}
+.memory figcaption span{font-size:.8em;opacity:.85;white-space:pre}
+.memory.big figcaption{font-size:24px;background:rgb(0 0 0 / 45%);bottom:14px;right:14px;border-radius:14px;padding:12px 18px}
+.mem-nav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:72px;min-height:0;padding:0;border:0;border-radius:14px;font-size:40px;line-height:1;color:#fff;background:rgb(0 0 0 / 28%);opacity:.55}
+.mem-nav:hover,.mem-nav:focus-visible{opacity:1}
+.mem-nav.left{left:10px}.mem-nav.right{right:10px}
+.note-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px;flex:none}
+.note-chips button{min-height:40px;padding:4px 16px;border-radius:999px;font-size:15px;color:var(--muted);border:1px solid var(--line)}
+.note-chips button.on{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.widget-order .side{min-width:64px}
+
+/* Round 9: memories fit their space; the widget opens a popup */
+.memory img{object-fit:contain}
+.memory.widget{display:block;width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:14px;background:transparent;position:relative;overflow:hidden}
+.memory.widget figcaption{font-size:14px;padding:18px 12px 8px 24px}
+.hero .memory.widget{height:100%}
+.w-memories{display:flex;flex-direction:column}
+.w-memories>.memory{flex:1}
+.home-side .w-memories{min-height:120px}
+
+/* Round 10: prayer log */
+.prayer-list.column li{gap:14px;justify-content:flex-start}
+.prayer-list.column li time{margin-inline-start:auto}
+.pray-gap{width:40px;flex:none}
+.pray-check{flex:none;width:40px;height:40px;min-height:0;padding:0;border:0;display:grid;place-items:center}
+.pray-check svg{width:30px;height:30px;border:2px solid currentColor;border-radius:50%;fill:none;stroke:transparent;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;padding:4px;opacity:.6}
+.pray-check:disabled{opacity:.25}
+.prayed .pray-check svg{background:var(--ok);border-color:var(--ok);stroke:var(--bg);opacity:1}
+.prayer-list.column li.prayed span,.prayer-list.column li.prayed time{color:var(--ok)}
+.prayer-list li.active .pray-check svg{border-color:var(--bg)}
+.pray-week{margin:14px 18px 0}
+.pray-week p{margin:0 0 8px;color:var(--muted);font-size:14px}
+.pray-week ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.pray-week li{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;border-radius:10px;font-size:12px;color:var(--muted)}
+.pray-week li.today{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text)}
+.pray-week span{margin-bottom:2px;white-space:nowrap}
+.pray-week i{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line)}
+.pray-week i.on{background:var(--ok);border-color:var(--ok)}
+.mosque{margin-top:12px}
+@media(max-height:700px) and (orientation:landscape){.pray-check{width:34px;height:34px}.pray-check svg{width:26px;height:26px}.pray-week{margin-top:8px}.pray-week li{padding:3px 0;gap:3px}.pray-week i{width:7px;height:7px}.pray-week p{display:none}.mosque{display:none}}
+
+/* Round 10: memories popup */
+.mem-pop{position:fixed;inset:0;z-index:56;display:flex;flex-direction:column;background:#000;overflow:hidden;color:#fff;animation:arrive .25s ease-out}
+.mem-pop-bg{position:absolute;inset:0;width:100%;height:100%;transform:scale(1.2);object-fit:cover;filter:blur(48px) brightness(.45) saturate(1.3);pointer-events:none}
+.mem-pop>*:not(.mem-pop-bg){position:relative}
+.mem-pop header{display:flex;align-items:center;gap:16px;padding:max(18px,env(safe-area-inset-top)) 24px 6px}
+.mem-pop header div{display:flex;flex-direction:column;flex:1}
+.mem-pop header strong{font-family:var(--kufi);font-weight:600;font-size:26px}
+.mem-pop header div span{font-size:16px;opacity:.75}
+.mem-pop .count{font-size:15px;opacity:.75;font-variant-numeric:tabular-nums}
+.glass{min-height:0;width:48px;height:48px;padding:0;border:1px solid rgb(255 255 255 / 18%);border-radius:50%;background:rgb(255 255 255 / 12%);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:#fff;font-size:28px;line-height:1;display:grid;place-items:center}
+.glass:hover{background:rgb(255 255 255 / 22%)}
+.mem-pop-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 88px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.mem-pop-stage>img{max-width:100%;max-height:100%;object-fit:contain;border-radius:14px;box-shadow:0 24px 70px rgb(0 0 0 / 55%);animation:arrive .35s ease-out}
+.mem-pop .nav{position:absolute;top:50%;transform:translateY(-50%);width:56px;height:56px;font-size:34px}
+.mem-pop .nav.left{left:20px}.mem-pop .nav.right{right:20px}
+.film{position:relative;list-style:none;display:flex;gap:8px;margin:0;padding:12px 24px max(16px,env(safe-area-inset-bottom));overflow-x:auto;scrollbar-width:none;justify-content:safe center}
+.film button{width:58px;height:58px;min-height:0;padding:0;border:2px solid transparent;border-radius:12px;overflow:hidden;opacity:.5;transition:opacity .2s}
+.film button.on{opacity:1;border-color:#fff}
+.film img{width:100%;height:100%;object-fit:cover;display:block}
+@media(max-width:760px){.mem-pop-stage{padding:8px 12px}.mem-pop .nav{display:none}}
+
+/* Round 11: prayer status */
+:root{--warn:#f2c14e}
+.pray-check{width:48px;height:48px}
+.pray-check svg{width:36px;height:36px;padding:5px}
+.prayed.ontime .pray-check svg{background:var(--ok);border-color:var(--ok)}
+.prayed.late .pray-check svg{background:var(--warn);border-color:var(--warn);stroke:#1a1a1a}
+.prayed.qada .pray-check svg{background:var(--err);border-color:var(--err);stroke:#1a1a1a}
+.prayer-list.column li.prayed.ontime span,.prayer-list.column li.prayed.ontime time{color:var(--ok)}
+.prayer-list.column li.prayed.late span,.prayer-list.column li.prayed.late time{color:var(--warn)}
+.prayer-list.column li.prayed.qada span,.prayer-list.column li.prayed.qada time{color:var(--err)}
+.prayer-list.column li.picking{gap:8px;padding-block:8px}
+.pick{flex:1;min-height:48px;padding:0 8px;border-radius:12px;font-size:17px;font-weight:500;color:#1a1a1a;border:0}
+.pick.ontime{background:var(--ok)}.pick.late{background:var(--warn)}.pick.qada{background:var(--err)}
+.pick.on{box-shadow:0 0 0 3px var(--text)}
+.pick.clear{flex:0 0 48px;background:var(--surface);color:var(--text);border:1px solid var(--line);font-size:24px}
+.pray-week i.ontime{background:var(--ok);border-color:var(--ok)}
+.pray-week i.late{background:var(--warn);border-color:var(--warn)}
+.pray-week i.qada{background:var(--err);border-color:var(--err)}
+.pray-week p{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.legend{display:flex;gap:10px;font-size:12px}.legend span{display:flex;align-items:center;gap:4px}
+.legend i{width:8px;height:8px;border-radius:50%}.legend i.ontime{background:var(--ok)}.legend i.late{background:var(--warn)}.legend i.qada{background:var(--err)}
+.prayer-face{gap:32px}
+.dial-wrap{aspect-ratio:560/460;max-width:62vw}
+.dial-center{inset:30% 33%}
+
+/* Round 11: gestures, hidden dock, pull-down panel */
+@media(min-width:700px) and (orientation:landscape){.stage{touch-action:none}}
+.memory.face,.mem-pop-stage{touch-action:none}
+.adhan-hint{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));z-index:6}
+.pull-backdrop{position:fixed;inset:0;z-index:54;background:color-mix(in srgb,var(--bg) 55%,transparent)}
+.pull{position:absolute;inset-inline:0;top:0;max-height:82vh;overflow:auto;background:var(--surface);border-bottom:1px solid var(--line);border-radius:0 0 26px 26px;padding:max(22px,env(safe-area-inset-top)) 32px 8px;box-shadow:0 20px 60px rgb(0 0 0 / 35%);animation:drop .28s ease-out}
+@keyframes drop{from{transform:translateY(-100%)}}
+.pull-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 40px}
+.pull-grid .w-prayers,.pull-grid .w-tasks{grid-column:1/-1}
+.pull-grid .w-tasks{height:300px}.pull-grid .w-memories{height:240px}
+.pull-handle{display:block;margin:14px auto 4px;width:120px;height:20px;min-height:0;padding:0;border:0;background:transparent}
+.pull-handle::after{content:"";display:block;margin:auto;width:90px;height:5px;border-radius:3px;background:var(--muted);opacity:.6}
+.panel-pick button.on{border-color:var(--accent);color:var(--accent)}
+/* Swipes must not select text; inputs and the settings sheet stay selectable. */
+.shell{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.shell input,.sheet{-webkit-user-select:text;user-select:text}
+
+/* Round 12: one home screen; views slide in from the side the finger came from */
+.view{height:100%}
+.view.from-left{animation:in-left .3s ease-out}.view.from-right{animation:in-right .3s ease-out}
+.view.from-up{animation:in-up .3s ease-out}.view.from-down{animation:in-down .3s ease-out}
+/* Finger moved left → the view enters from the right edge, and so on. */
+@keyframes in-left{from{transform:translateX(40%);opacity:0}}
+@keyframes in-right{from{transform:translateX(-40%);opacity:0}}
+@keyframes in-up{from{transform:translateY(30%);opacity:0}}
+@keyframes in-down{from{transform:translateY(-30%);opacity:0}}
+.shell{padding-bottom:max(28px,env(safe-area-inset-bottom))}
+.home .opens{cursor:pointer}
+.corner{position:fixed;bottom:max(10px,env(safe-area-inset-bottom));left:max(12px,env(safe-area-inset-left));display:flex;align-items:center;gap:2px;opacity:.45;z-index:5}
+.corner:hover,.corner:focus-within{opacity:1}
+.corner .gear,.view-bar button{border:0;width:44px;min-height:44px;padding:0;display:grid;place-items:center;border-radius:50%}
+.corner svg,.view-bar svg{width:22px;height:22px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.view-bar{position:fixed;top:max(10px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));display:flex;gap:4px;z-index:5;opacity:.55}
+.view-bar:hover,.view-bar:focus-within{opacity:1}
+.view-bar .pin.on svg{stroke:var(--accent);fill:var(--accent)}
+.edge-hints span{position:fixed;z-index:4;font-size:14px;color:var(--muted);background:color-mix(in srgb,var(--surface) 85%,transparent);padding:6px 12px;border-radius:12px;pointer-events:none;animation:hint 2.5s ease-in-out forwards}
+@keyframes hint{0%{opacity:0}15%,70%{opacity:.9}100%{opacity:0}}
+/* Swipe up brings the view from the bottom, so its hint sits at the bottom edge, and so on. */
+.hint-up{bottom:12px;left:50%;transform:translateX(-50%)}
+.hint-down{top:12px;left:50%;transform:translateX(-50%)}
+.hint-left{right:8px;top:50%;transform:translateY(-50%)}
+.hint-right{left:8px;top:50%;transform:translateY(-50%)}
+.pull-top{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;margin-bottom:16px}
+.pull-top .link{margin:0 2px}
+.pull-top button{margin-inline-start:auto;min-height:40px}
+
+/* Round 13: scrolling task lists, note picker */
+.task-list.scrolls{overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:thin;-webkit-mask-image:linear-gradient(#000 calc(100% - 24px),transparent);mask-image:linear-gradient(#000 calc(100% - 24px),transparent)}
+.task-list.scrolls li{flex:none}
+.note-picker{position:relative}
+.note-button{display:flex;align-items:center;gap:8px}
+.note-button b{font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.note-button.on{border-color:var(--accent);color:var(--accent)}
+.note-menu{position:absolute;top:calc(100% + 8px);inset-inline-end:0;max-height:60vh;overflow-y:auto;z-index:20;width:max-content;max-width:min(520px,80vw);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 18px 50px rgb(0 0 0 / 35%);animation:arrive .15s ease-out}
+.note-menu .note-chips{margin:0}
+.tasks-face header{align-items:center}
+.tasks-face .note-picker{margin-inline-start:auto}
+.tasks-face .edit-toggle{margin-inline-start:0}
+
+/* Round 14: year-grouped film strip, folded into a button */
+.memories-face{flex-direction:column;gap:8px}
+.memories-face .memory{flex:1;min-height:0}
+.filmstrip{flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;max-width:100%}
+.film-toggle{display:flex;align-items:center;gap:8px;min-height:40px;border-radius:999px;padding:4px 18px;font-size:15px;background:var(--surface);border-color:var(--line)}
+.film-toggle b{font-weight:400;color:var(--muted)}
+.film-toggle span{font-size:11px;color:var(--muted)}
+.film{position:relative;display:flex;gap:18px;max-width:100%;overflow-x:auto;padding:4px 8px 8px;scrollbar-width:none;touch-action:pan-x}
+.film-year{flex:none;display:flex;flex-direction:column;gap:6px}
+.film-year+.film-year{padding-inline-start:18px;border-inline-start:1px solid var(--line)}
+.film-year header{display:flex;align-items:baseline;gap:8px;font-size:13px;color:var(--muted)}
+.film-year header strong{font-size:15px;color:var(--text);font-weight:500}
+.film-year ol{list-style:none;display:flex;gap:6px;margin:0;padding:0}
+.film button{width:58px;height:58px;min-height:0;padding:0;border:2px solid transparent;border-radius:12px;overflow:hidden;opacity:.55;transition:opacity .2s}
+.film button.on{opacity:1;border-color:var(--accent)}
+.film img{width:100%;height:100%;object-fit:cover;display:block}
+.mem-pop .filmstrip{padding:6px 24px max(14px,env(safe-area-inset-bottom))}
+.mem-pop .film-toggle{background:rgb(255 255 255 / 12%);border-color:rgb(255 255 255 / 18%);color:#fff;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.mem-pop .film-toggle b,.mem-pop .film-toggle span,.mem-pop .film-year header{color:rgb(255 255 255 / 70%)}
+.mem-pop .film-year header strong{color:#fff}
+.mem-pop .film-year+.film-year{border-color:rgb(255 255 255 / 20%)}
+.mem-pop .film button.on{border-color:#fff}
+
+.note-menu .note-chips button{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:760px){.note-menu{position:fixed;top:auto;inset-inline:16px;width:auto;max-width:none;margin-top:8px}}
+
+/* Round 16 (Safari): -webkit-box titles shrank to their text in Safari, which split a title from its note/date line.
+   Every title now starts at the checkbox side of the page, whatever its language (dir=auto keeps the text itself
+   correct), with its note and date directly under it. The right padding keeps iPadOS's scroll indicator off the text. */
+.task-text>span{width:100%;align-self:stretch}
+html[dir=rtl] .task-text,html[dir=rtl] .task-text>span{text-align:right}
+html[dir=ltr] .task-text,html[dir=ltr] .task-text>span{text-align:left}
+.task-text:has(small)>span{display:block;white-space:nowrap;text-overflow:ellipsis}
+.task-text small{width:100%;justify-content:flex-start}
+.task-list.scrolls{padding-right:14px}

@@ -1,0 +1,9 @@
+# Example. Put config.json in ./data; mount the folders it names (see README).
+services:
+  rukn:
+    image: ghcr.io/3mro777o/rukn:latest
+    restart: unless-stopped
+    ports: ["127.0.0.1:3000:3000"]
+    volumes:
+      - ./data:/data
+      # - /path/to/vault/To Do:/vault
