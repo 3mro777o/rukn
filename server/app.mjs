@@ -32,8 +32,9 @@ export function createApp(dbPath, dist = resolve('dist'), config={}) {
  const state=()=>{const {todos,...rest}=store.state();const files=obsidian?.files()||[];
   // Notes are shown unless hidden, so a new note in a source folder appears by itself.
   const visible=files.filter(f=>!rest.layout.hiddenFiles.includes(f));
-  const week=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin'}).format(new Date(Date.now()-6*864e5));
-  return {...rest,prayed:store.prayedSince(week),todos:obsidian?obsidian.list(visible):todos,tasks:obsidian?{folder:obsidian.label,files,visible}:null,reminders:reminders(),reminderFile:remindersFile?remindersFile.split('/').slice(-2).join('/'):null,omarchy:omarchy.read(),immich:!!immich,version};};
+  // ponytail: the whole log window (12 weeks, as far as the tracker pages back) rides every broadcast; fetch older weeks on demand if it grows.
+  const since=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin'}).format(new Date(Date.now()-(12*7-1)*864e5));
+  return {...rest,prayed:store.prayedSince(since),todos:obsidian?obsidian.list(visible):todos,tasks:obsidian?{folder:obsidian.label,files,visible}:null,reminders:reminders(),reminderFile:remindersFile?remindersFile.split('/').slice(-2).join('/'):null,omarchy:omarchy.read(),immich:!!immich,version};};
  const broadcast=()=>{const msg=`data: ${JSON.stringify(state())}\n\n`; for(const client of clients) client.write(msg);};
  app.use((req,res,next)=>{
   if(['POST','PATCH','DELETE'].includes(req.method)) {

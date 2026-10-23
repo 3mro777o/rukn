@@ -63,27 +63,36 @@ function SunriseLine({c}:{c:Ctx}){
 const SALAH=['fajr','dhuhr','asr','maghrib','isha'];
 // حاضر = on time, آخر الوقت = at the end of its time, قضاء = made up later.
 export const STATUS:Record<string,{ar:string;en:string}>={ontime:{ar:'حاضر',en:'On time'},late:{ar:'آخر الوقت',en:'Late'},qada:{ar:'قضاء',en:'Made up'}};
-// The last seven days as columns of five dots, colored by status.
-function PrayerWeek({c}:{c:Ctx}){
- const days=Array.from({length:7},(_,i)=>{const d=new Date(c.now.getTime()-(6-i)*864e5);return {date:berlinDay(d),name:d.toLocaleDateString(c.lang==='ar'?'ar':'en-GB',{weekday:'short',timeZone:TZ})};});
- const today=Object.keys(c.prayed[days[6].date]||{}).length;
- return <div className="pray-week" aria-label={c.lang==='ar'?'صلوات آخر سبعة أيام':'Prayers in the last seven days'}>
-  <p>{c.lang==='ar'?`اليوم ${today} من 5`:`Today ${today} of 5`}<span className="legend">{Object.entries(STATUS).map(([k,v])=><span key={k}><i className={k}/>{v[c.lang]}</span>)}</span></p>
-  <ol>{days.map((d,i)=>{const done=c.prayed[d.date]||{};return <li key={d.date} className={i===6?'today':''} title={d.date}>
-   <span>{d.name.replace(/^ال/,'')}</span>{SALAH.map(k=><i key={k} className={done[k]||''}/>)}</li>;})}</ol>
+// Seven days as columns of five dots, colored by status; arrows page back by weeks, tapping a day opens it for marking.
+const WEEKS=12;
+function PrayerWeek({c,back,setBack,day,setDay}:{c:Ctx;back:number;setBack:(n:number)=>void;day:string;setDay:(d:string|null)=>void}){
+ const ar=c.lang==='ar',fmt=(d:Date,o:Intl.DateTimeFormatOptions)=>d.toLocaleDateString(ar?'ar':'en-GB',{...o,timeZone:TZ});
+ const days=Array.from({length:7},(_,i)=>{const d=new Date(c.now.getTime()-(back*7+6-i)*864e5);return {date:berlinDay(d),name:fmt(d,{weekday:'short'}),label:fmt(d,{weekday:'long',day:'numeric',month:'long'})};});
+ const today=berlinDay(c.now),count=Object.keys(c.prayed[day]||{}).length,sel=days.find(d=>d.date===day);
+ return <div className="pray-week" aria-label={ar?'سجل الصلوات':'Prayer log'}>
+  <p><span>{day===today?(ar?'اليوم':'Today'):sel?.label||day}{ar?` ${count} من 5`:` ${count} of 5`}{day!==today&&<button className="pray-today" onClick={()=>{setBack(0);setDay(null);}}>{ar?'اليوم':'Today'}</button>}</span><span className="legend">{Object.entries(STATUS).map(([k,v])=><span key={k}><i className={k}/>{v[c.lang]}</span>)}</span></p>
+  <div className="pray-days">
+   <button className="pray-page" disabled={back>=WEEKS-1} aria-label={ar?'الأسبوع السابق':'Previous week'} onClick={()=>setBack(back+1)}>‹</button>
+   <ol>{days.map(d=>{const done=c.prayed[d.date]||{};return <li key={d.date} className={(d.date===today?'today ':'')+(d.date===day?'sel':'')}><button title={d.date} aria-label={d.label} aria-pressed={d.date===day} onClick={()=>setDay(d.date===today?null:d.date)}>
+    <span>{d.name.replace(/^ال/,'')}</span>{SALAH.map(k=><i key={k} className={done[k]||''}/>)}</button></li>;})}</ol>
+   <button className="pray-page" disabled={back<=0} aria-label={ar?'الأسبوع التالي':'Next week'} onClick={()=>setBack(back-1)}>›</button>
+  </div>
  </div>;
 }
 
 function PrayerList({c,variant}:{c:Ctx;variant:'strip'|'column'}){
  const [picking,setPicking]=useState<string|null>(null);
+ // The day being marked: null is today; an earlier day marks its prayers after the fact.
+ const [past,setPast]=useState<string|null>(null);const [back,setBack]=useState(0);
  if(!c.prayers)return <p className="quiet">{c.prayerFailed?(c.lang==='ar'?'تعذّر جلب المواقيت، إعادة المحاولة تلقائيًا':'Prayer times unavailable, retrying'):(c.lang==='ar'?'جاري تحميل المواقيت…':'Loading prayer times…')}</p>;
+ const date=past&&past<c.prayers.date?past:c.prayers.date,earlier=date!==c.prayers.date;
  return <>
-  <ol className={'prayer-list '+variant}>
+  <ol className={'prayer-list '+variant+(earlier?' earlier':'')}>
    {c.prayers.today.map(p=>{
-    const cls=(c.active?.at===p.at?'active ':'')+(c.next?.at===p.at?'next ':'')+(p.at<c.now.getTime()&&c.active?.at!==p.at?'past ':'')+(p.key==='sunrise'?'sunrise':'');
-    if(variant==='strip'||p.key==='sunrise')return <li key={p.key} className={cls}>{variant==='column'&&<i className="pray-gap"/>}<span>{prayerName(c.lang,p.key)}</span><time dir="ltr">{p.time}</time></li>;
+    const cls=earlier?'':(c.active?.at===p.at?'active ':'')+(c.next?.at===p.at?'next ':'')+(p.at<c.now.getTime()&&c.active?.at!==p.at?'past ':'')+(p.key==='sunrise'?'sunrise':'');
+    if(variant==='strip'||p.key==='sunrise')return earlier?null:<li key={p.key} className={cls}>{variant==='column'&&<i className="pray-gap"/>}<span>{prayerName(c.lang,p.key)}</span><time dir="ltr">{p.time}</time></li>;
     // A prayer can be marked once its time has come; the circle opens a choice of status in the row.
-    const status=c.prayed[c.prayers!.date]?.[p.key],open=p.at<=c.now.getTime(),date=c.prayers!.date;
+    const status=c.prayed[date]?.[p.key],open=earlier||p.at<=c.now.getTime();
     const pick=(v:string|null)=>{setPicking(null);c.setPrayed(date,p.key,v);};
     if(picking===p.key)return <li key={p.key} className="picking" role="group" aria-label={prayerName(c.lang,p.key)}>
      {Object.entries(STATUS).map(([k,v])=><button key={k} className={'pick '+k+(status===k?' on':'')} autoFocus={k==='ontime'} onClick={()=>pick(k)}>{v[c.lang]}</button>)}
@@ -91,10 +100,10 @@ function PrayerList({c,variant}:{c:Ctx;variant:'strip'|'column'}){
     </li>;
     return <li key={p.key} className={cls+(status?' prayed '+status:'')}>
      <button className="pray-check" disabled={!open||c.busy||!c.connected} aria-label={prayerName(c.lang,p.key)+(status?': '+STATUS[status][c.lang]:'')} aria-haspopup="true" onClick={()=>setPicking(p.key)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
-     <span>{prayerName(c.lang,p.key)}</span><time dir="ltr">{p.time}</time></li>;
+     <span>{prayerName(c.lang,p.key)}</span>{!earlier&&<time dir="ltr">{p.time}</time>}</li>;
    })}
   </ol>
-  {variant==='column'&&<PrayerWeek c={c}/>}
+  {variant==='column'&&<PrayerWeek c={c} back={back} setBack={setBack} day={date} setDay={d=>{setPast(d);setPicking(null);}}/>}
   {(c.prayers.stale||c.prayerFailed)&&<p className="quiet warn">{c.lang==='ar'?'جدول محفوظ، تعذّر التحديث':'Saved timetable, update failed'}</p>}
  </>;
 }
